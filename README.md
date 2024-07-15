@@ -1,64 +1,104 @@
 # prophet-challenge
-Module 8 Prophet Challenge
+# Module 8 Prophet Challenge
 
-
-# Module 6 Read Me Notes
 
 ## Background
 
-The purpose of this challenge was to prepare data for use by a recommendation system, which would provide users with movie reviews and the corresponding movies.
 
-Data was extracted from two different sources: The New York Times API and The Movie Database (“TMDB”). Movie reviews from The New York Times were compiled into the reviews_df data frame. The titles from these movies were then used to access the corresponding details from TMDB, which were compiled into a second data frame, movie_list_df.
+The purpose of this challenge was to analyze financial and user search data for Mercado Libre, the most popular e-commerce site in Latin America. 
 
-The data frames were merged and cleaned to the clean_df data frame to consolidate the information and then extracted to love_movie_reviews_and_details.csv. The .csv file has been prepared to provide the recommendation system with data that can be easily accessed, analyzed, and used to make a movie recommendation with specificity.
 
 ## Installation
 
-#### The following dependencies are required to successfully run the project:
-- import requests
-- import time
-- from dotenv import load_dotenv
-- import os
+
+The following libraries and dependencies are required to successfully run the project:
+- !pip install prophet
 - import pandas as pd
-- import json
-- from pandas import json_normalize
+- from prophet import Prophet
+- import datetime as dt
+- import numpy as np
+- %matplotlib inline
+
+
+## Repository Files and Starter Code
+- [Mercado Libre Google Hourly Search Trends](https://static.bc-edx.com/ai/ail-v-1-0/m8/lms/datasets/google_hourly_search_trends.csv) 
+
+- forecasting_net_prophet.ipynb: starter code provided in the assignment
+
+
+- forecasting_net_prophet_AKW_solution.ipynb: completed notebook with data analysis, visualizations, and solutions/answers
+
 
 ## Methodology
-The project was completed in three phases: 
-1. Access the New York Times API
-2. Access TMDB API	
-3. Merge and Clean the Data for Export
-### Part 1 - Access the New York Times API
-1. Using the variables that were provided in the starter code, I created a query_url. Our goal was to retrieve 200 results, but the New York Times API limits its results to 10 per page. Since we needed to access 20 pages of results, I created a for loop. Inside the loop, the following occurred:
-2. The query_url was extended to include a variable page parameter.
-3. I made a "GET" request and retrieved the JSON in a variable.
-4. A 12-second interval was added between the queries to stay within the New York Times’ API query limit of 5 per minute.
-5. A try-except clause was added to loop through the JSON data and add it review to the reviews_list. I used the print function to print the completed query page number to ensure that the loop was executed.
-6. I converted the reviews_list to a Pandas DataFrame, and extracted the movie title from the “headline.main” column using the Pandas apply() method and a lambda function provided in the starter code. The extracted movie titles were saved into a new “titles” column, which was ultimately used to create a list of titles using the to_list() function. This “titles” list was then used to perform TMDB queries in Part 2.
-### Part 2 - Access TMDB API
-1. Using the “titles” list from Part 1 and the query_url provided in the starter code, I was able to perform queries using TMDB.
-2. To account for TMDB API’s query limit, I initiated a request counter that would increment by 1 for each iteration through the titles list. For every request that was a multiple of 50, i.e. 50, 100, 150,  I added a time sleep.
-3. Using a loop, I was able to make a “get request” using the title from the “title” list, which provided limited information regarding the movie. 
-4. Using a try clause, the “movie id” was collected from these results and was then used with the details query to get and retrieve the full movie details.
-5. When a movie’s details were successfully found, the results were cleaned and used to create a dictionary that was appended to a list, “tmdb_movies_list.” After a movie’s details were appended to the list, a print statement was drafted to indicate the title was found. Of the original 200 titles, details were retrieved for 154.
-6. Where the “movie id” could not be found or was unable to be used to retrieve additional details, the except clause would be activated and print a statement that the movie was not found. This was the case for 46 of the original 200 titles.
-7. The “tmdb_movies_list” containing the details for the 153 movies was converted to a DataFrame movie_list_df.
+The project was completed in four steps using Google Colab:
+1. Find unusual patterns in hourly Google search traffic
+2. Mine the search traffic data for seasonality
+3. Relate the search traffic to stock price patterns
+4. Create a time series model with Prophet
 
-### Part 3 - Merge and Clean the Data for Export
-1. In this final part, the DataFrames from Part 1 and Part 2, reviews_df and movie_list_df, respectively, were merged using an inner join on the common “titles” column. The rows that did not include matching data were dropped, resulting in the merge_df DataFrame, which contains 128 common titles. 
-2. This merged data frame was cleaned, duplicates dropped, and the index was reset. 
-This process ended up requiring more time than I expected, as I struggled with the extraction of genres, spoken_languages, and production_countries columns. Initially, I had attempted to complete this process using another for loop, but it wasn’t until I used list comprehension (and trial and error) that the extraction was successful. The data could be fixed by converting it to a string and removing the problematic characters.
-3. Next, I dropped the duplicate rows and reset the index and I took some time to verify that the duplicates were dropped from the merged DataFrame. I used the value_counts function on the “title” column, which confirmed that there was only one duplicate title: “After Love.” I reviewed both rows and while the movies are related, they are different versions with different details and production information.  
-4. Finally, after confirming the DataFrame was cleaned and did not contain duplicates, I exported it to a csv file. 
+
+## Solutions/Answers
+
+
+- **Question:** Did the Google search traffic increase during the month that MercadoLibre released its financial results?
+  
+        Yes, traffic increased by approximately 8.6% in May 2020 compared to the monthly median value.
+
+
+- **Question:** Are there any time based trends that you can see in the data?
+
+
+        Searches vary significantly over the course of a day, with the highest volume occurring around midnight. In the morning, search volume sharply declines and reaches a low around 8-9 a.m., increasing throughout the remainder of the day. The steepest increases can be seen from 9 a.m. to 3 p.m. and from 8 p.m. to midnight.
+
+
+        Tuesdays represent the highest average volume of searches. Searches steadily decline over the remainder of the work week and then plummet over the weekend, with Sundays the least active day for searches
+
+
+        There is quite a bit of variability from week to week. Overall, the first quarter was the most active quarter for searching. The lowest week for searching is around week 35, as well as low points in the first and final weeks of the year, which corresponds with celebrations of winter holidays and celebrations of the new year. In the weeks leading up to these holidays, however, there is a relatively sharp increase in overall searches starting in week 40 that continues until around week 50.
+
+
+- **Question:** Do both time series indicate a common trend that’s consistent with this narrative?
+
+
+        Both time series indicate a common trend consistent with the initial shock of COVID lockdowns in March 2020. Both stock closing prices and search trends sharply declined in March 2020. The stock closing time series demonstrates that the closing price not only rebounded but steadily rose after this initial shock. Search trends also recovered after March 2020, but they did not demonstrate a period of growth; instead, they were relatively consistent, albeit slightly lower than prior to March 2020.
+
+
+
+- **Question:** Does a predictable relationship exist between the lagged search traffic and the stock volatility or between the lagged search traffic and the stock price returns?
+
+        There is a very weak negative correlation between lagged search traffic and stock volatility since the correlation coefficient is -0.15.
+
+        There is almost no correlation between lagged search traffic and the hourly stock returns because the correlation coefficient is 0.02.
+
+
+- **Question:**  How's the near-term forecast for the popularity of MercadoLibre?
+
+        Overall, the forecast suggests that MercadoLibre's popularity will return to pretty consistent historic levels.
+
+
+        Over the first twenty-some days, searches are predicted to plateau and then drop a little before rebounding and increasing around day 22 days. Searches will begin to increase and trend toward historical levels, albeit lower than MercadoLibre's previous peaks in popularity.
+- **Question:** What time of day exhibits the greatest popularity?
+    
+        Midnight
+- **Question:** Which day of week gets the most search traffic?
+ 
+        Tuesday
+- **Question:** What's the lowest point for search traffic in the calendar year?
+
+        Between October and November
+
+
+
 
 ## Resources Consulted
-As this challenge was the most difficult to date, I consulted several sources throughout the process. 
+For this challenge, I consulted the starter code files provided in the assignment, which are referenced above.
 
-I consulted the starter code that was included with the challenges as well as the notes and activities from Modules 4, 5, and 6.
 
-Beyond the class resources, I also relied on the API documentation. [The New York Times API Documentation](https://developer.nytimes.com/docs/articlesearch-product/1/overview) and [TMDB](https://developer.themoviedb.org/docs/search-and-query-for-details).
+Additionally, the AI assistant in Colab, “Gemini” offered some suggestions of predictive code. 
 
-When I was stuck on the extraction in Part 3, I looked at [Stack Overflow](https://stackoverflow.com/questions/51566336/how-do-i-loop-through-an-entire-json-file-and-extract-the-data-into-variables) for help with extraction using list comprehension.
+
+
+
 
 
 
